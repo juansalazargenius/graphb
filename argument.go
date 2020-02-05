@@ -60,6 +60,10 @@ func ArgumentString(name string, value string) Argument {
 	return Argument{name, argString(value)}
 }
 
+func ArgumentConst(name string, value string) Argument {
+	return Argument{name, argConst(value)}
+}
+
 func ArgumentBoolSlice(name string, values ...bool) Argument {
 	return Argument{name, argBoolSlice(values)}
 }
@@ -70,6 +74,10 @@ func ArgumentIntSlice(name string, values ...int) Argument {
 
 func ArgumentStringSlice(name string, values ...string) Argument {
 	return Argument{name, argStringSlice(values)}
+}
+
+func ArgumentConstSlice(name string, values ...string) Argument {
+	return Argument{name, argConstSlice(values)}
 }
 
 // ArgumentCustomType returns a custom GraphQL type's argument representation, which could be a recursive structure.
@@ -120,6 +128,18 @@ func (v argString) stringChan() <-chan string {
 	tokenChan := make(chan string)
 	go func() {
 		tokenChan <- fmt.Sprintf(`"%s"`, v)
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argConst represents a string value.
+type argConst string
+
+func (v argConst) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- fmt.Sprintf(`%s`, v)
 		close(tokenChan)
 	}()
 	return tokenChan
@@ -179,6 +199,25 @@ func (s argStringSlice) stringChan() <-chan string {
 				tokenChan <- ","
 			}
 			tokenChan <- fmt.Sprintf(`"%s"`, v)
+		}
+		tokenChan <- "]"
+		close(tokenChan)
+	}()
+	return tokenChan
+}
+
+// argStringSlice implements valueSlice
+type argConstSlice []string
+
+func (s argConstSlice) stringChan() <-chan string {
+	tokenChan := make(chan string)
+	go func() {
+		tokenChan <- "["
+		for i, v := range s {
+			if i != 0 {
+				tokenChan <- ","
+			}
+			tokenChan <- fmt.Sprintf(`%s`, v)
 		}
 		tokenChan <- "]"
 		close(tokenChan)
