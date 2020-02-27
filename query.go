@@ -115,6 +115,16 @@ func (q *Query) JSON() (string, error) {
 	return fmt.Sprintf(`{"query":"%s"}`, strings.Replace(s, `"`, `\"`, -1)), nil
 }
 
+// QueryToString returns a stringof the query.
+func (q *Query) QueryToString() (string, error) {
+	strCh, err := q.StringChan()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	s := StringFromChan(strCh)
+	return fmt.Sprintf(`%s`, s), nil
+}
+
 // SetName sets the Name field of this Query.
 func (q *Query) SetName(name string) *Query {
 	q.Name = name
